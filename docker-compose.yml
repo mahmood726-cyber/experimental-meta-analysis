@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  experimental-meta-analysis:
+    build: .
+    container_name: meta-analysis-framework
+    volumes:
+      # Mount results directory
+      - ./results:/app/results
+      - ./reports:/app/reports
+      # Mount local code for development
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+
+  # Jupyter notebook service for interactive analysis
+  jupyter:
+    build: .
+    container_name: meta-analysis-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - ./results:/app/results
+    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+
+volumes:
+  results:
+  reports:

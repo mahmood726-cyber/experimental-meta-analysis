@@ -1,0 +1,170 @@
+{
+  "timestamp": "2025-12-31T15:38:43.669470",
+  "total_methods_tested": 299,
+  "total_scenarios": 12,
+  "simulations_per_method": 1000,
+  "superior_methods_count": 23,
+  "superior_methods": [
+    {
+      "rank": 1,
+      "name": "KnappHartungMod_truncFalse",
+      "score": 7.835620949702741,
+      "win_rate": 0.75,
+      "improvement": 1.178031030596864
+    },
+    {
+      "rank": 2,
+      "name": "IVPlus_reg0.1",
+      "score": 7.80763374593453,
+      "win_rate": 0.75,
+      "improvement": 0.8441329007563388
+    },
+    {
+      "rank": 3,
+      "name": "RidgeRegularized_0.01",
+      "score": 7.8022830609677385,
+      "win_rate": 0.75,
+      "improvement": 0.4011423881874881
+    },
+    {
+      "rank": 4,
+      "name": "ElasticNet_l0.1_a0.25",
+      "score": 7.80177592230396,
+      "win_rate": 0.8333333333333334,
+      "improvement": 0.46330979890608937
+    },
+    {
+      "rank": 5,
+      "name": "Tikhonov_pm0.5_pp1.0",
+      "score": 7.801635386345738,
+      "win_rate": 0.5833333333333334,
+      "improvement": 0.8289732233080489
+    },
+    {
+      "rank": 6,
+      "name": "Tikhonov_pm0.0_pp0.1",
+      "score": 7.800345343604185,
+      "win_rate": 0.8333333333333334,
+      "improvement": 0.3981395231374141
+    },
+    {
+      "rank": 7,
+      "name": "IVPlus_reg0.05",
+      "score": 7.798667486436951,
+      "win_rate": 0.75,
+      "improvement": 0.45761634127778794
+    },
+    {
+      "rank": 8,
+      "name": "ElasticNet_l0.1_a0.5",
+      "score": 7.7985974307796075,
+      "win_rate": 0.75,
+      "improvement": 0.49394235026813493
+    },
+    {
+      "rank": 9,
+      "name": "QualityEffects_pow0.5",
+      "score": 7.79820874080693,
+      "win_rate": 0.6666666666666666,
+      "improvement": 1.5143214398088176
+    },
+    {
+      "rank": 10,
+      "name": "Permutation_500",
+      "score": 7.795452018814445,
+      "win_rate": 0.5833333333333334,
+      "improvement": 0.9616683648916242
+    },
+    {
+      "rank": 11,
+      "name": "ElasticNet_l0.1_a0.75",
+      "score": 7.793235303773848,
+      "win_rate": 0.75,
+      "improvement": 0.43455280013501635
+    },
+    {
+      "rank": 12,
+      "name": "GroupLasso_0.1",
+      "score": 7.788947298010882,
+      "win_rate": 0.75,
+      "improvement": 0.3942431707926031
+    },
+    {
+      "rank": 13,
+      "name": "LassoRegularized_0.1",
+      "score": 7.788947298010708,
+      "win_rate": 0.75,
+      "improvement": 0.3942431707909164
+    },
+    {
+      "rank": 14,
+      "name": "LassoRegularized_0.01",
+      "score": 7.78757586525267,
+      "win_rate": 0.8333333333333334,
+      "improvement": 0.0980204476367432
+    },
+    {
+      "rank": 15,
+      "name": "MaximumEntropy",
+      "score": 7.782506965356457,
+      "win_rate": 0.5833333333333334,
+      "improvement": 0.1655021295250215
+    },
+    {
+      "rank": 16,
+      "name": "Boosting_20_lr0.2",
+      "score": 7.779375140971793,
+      "win_rate": 0.5833333333333334,
+      "improvement": 0.023804811845367653
+    },
+    {
+      "rank": 17,
+      "name": "Boosting_5_lr0.2",
+      "score": 7.775159068026663,
+      "win_rate": 0.5,
+      "improvement": 0.08013733399129154
+    },
+    {
+      "rank": 18,
+      "name": "GaussianCopula",
+      "score": 7.772773135607943,
+      "win_rate": 0.5833333333333334,
+      "improvement": 1.5955436153204883
+    },
+    {
+      "rank": 19,
+      "name": "SampleSizeWeighted_pow0.5",
+      "score": 7.757277869348328,
+      "win_rate": 0.5,
+      "improvement": 0.20154503819599567
+    },
+    {
+      "rank": 20,
+      "name": "SequentialAdaptive_lr0.05",
+      "score": 7.753666670114465,
+      "win_rate": 0.5,
+      "improvement": 1.4110910258181335
+    },
+    {
+      "rank": 21,
+      "name": "Softmax_temp2.0",
+      "score": 7.748163848044171,
+      "win_rate": 0.5,
+      "improvement": 0.6965147005454018
+    },
+    {
+      "rank": 22,
+      "name": "SatterthwaiteDF",
+      "score": 7.674239703286766,
+      "win_rate": 0.5,
+      "improvement": 1.3550228697436888
+    },
+    {
+      "rank": 23,
+      "name": "KnappHartungMod_truncTrue",
+      "score": 7.66294046335797,
+      "win_rate": 0.5,
+      "improvement": 1.1802813820922913
+    }
+  ]
+}

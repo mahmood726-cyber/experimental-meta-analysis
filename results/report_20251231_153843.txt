@@ -1,0 +1,123 @@
+================================================================================
+EXPERIMENTAL META-ANALYSIS: SIMULATION RESULTS REPORT
+================================================================================
+
+Generated: 2025-12-31 15:38:43
+Total Methods Tested: 299
+Scenarios: 12
+Simulations per Method/Scenario: 1000
+
+--------------------------------------------------------------------------------
+SUPERIOR METHODS (Outperforming Standard Approaches)
+--------------------------------------------------------------------------------
+
+1. KnappHartungMod_truncFalse
+   Score: 7.836 | Win Rate vs DL: 75.0% | Avg Improvement: 1.2%
+
+2. IVPlus_reg0.1
+   Score: 7.808 | Win Rate vs DL: 75.0% | Avg Improvement: 0.8%
+
+3. RidgeRegularized_0.01
+   Score: 7.802 | Win Rate vs DL: 75.0% | Avg Improvement: 0.4%
+
+4. ElasticNet_l0.1_a0.25
+   Score: 7.802 | Win Rate vs DL: 83.3% | Avg Improvement: 0.5%
+
+5. Tikhonov_pm0.5_pp1.0
+   Score: 7.802 | Win Rate vs DL: 58.3% | Avg Improvement: 0.8%
+
+6. Tikhonov_pm0.0_pp0.1
+   Score: 7.800 | Win Rate vs DL: 83.3% | Avg Improvement: 0.4%
+
+7. IVPlus_reg0.05
+   Score: 7.799 | Win Rate vs DL: 75.0% | Avg Improvement: 0.5%
+
+8. ElasticNet_l0.1_a0.5
+   Score: 7.799 | Win Rate vs DL: 75.0% | Avg Improvement: 0.5%
+
+9. QualityEffects_pow0.5
+   Score: 7.798 | Win Rate vs DL: 66.7% | Avg Improvement: 1.5%
+
+10. Permutation_500
+   Score: 7.795 | Win Rate vs DL: 58.3% | Avg Improvement: 1.0%
+
+11. ElasticNet_l0.1_a0.75
+   Score: 7.793 | Win Rate vs DL: 75.0% | Avg Improvement: 0.4%
+
+12. GroupLasso_0.1
+   Score: 7.789 | Win Rate vs DL: 75.0% | Avg Improvement: 0.4%
+
+13. LassoRegularized_0.1
+   Score: 7.789 | Win Rate vs DL: 75.0% | Avg Improvement: 0.4%
+
+14. LassoRegularized_0.01
+   Score: 7.788 | Win Rate vs DL: 83.3% | Avg Improvement: 0.1%
+
+15. MaximumEntropy
+   Score: 7.783 | Win Rate vs DL: 58.3% | Avg Improvement: 0.2%
+
+16. Boosting_20_lr0.2
+   Score: 7.779 | Win Rate vs DL: 58.3% | Avg Improvement: 0.0%
+
+17. Boosting_5_lr0.2
+   Score: 7.775 | Win Rate vs DL: 50.0% | Avg Improvement: 0.1%
+
+18. GaussianCopula
+   Score: 7.773 | Win Rate vs DL: 58.3% | Avg Improvement: 1.6%
+
+19. SampleSizeWeighted_pow0.5
+   Score: 7.757 | Win Rate vs DL: 50.0% | Avg Improvement: 0.2%
+
+20. SequentialAdaptive_lr0.05
+   Score: 7.754 | Win Rate vs DL: 50.0% | Avg Improvement: 1.4%
+
+21. Softmax_temp2.0
+   Score: 7.748 | Win Rate vs DL: 50.0% | Avg Improvement: 0.7%
+
+22. SatterthwaiteDF
+   Score: 7.674 | Win Rate vs DL: 50.0% | Avg Improvement: 1.4%
+
+23. KnappHartungMod_truncTrue
+   Score: 7.663 | Win Rate vs DL: 50.0% | Avg Improvement: 1.2%
+
+
+--------------------------------------------------------------------------------
+SCENARIO DESCRIPTIONS
+--------------------------------------------------------------------------------
+
+- small_homogeneous: Small MA with no heterogeneity
+  k=5, tau2=0.0, true_effect=0.5
+
+- small_heterogeneous: Small MA with moderate heterogeneity
+  k=5, tau2=0.1, true_effect=0.5
+
+- medium_homogeneous: Medium MA with no heterogeneity
+  k=15, tau2=0.0, true_effect=0.3
+
+- medium_heterogeneous: Medium MA with high heterogeneity
+  k=15, tau2=0.2, true_effect=0.3
+
+- large_heterogeneous: Large MA with moderate heterogeneity
+  k=30, tau2=0.15, true_effect=0.4
+
+- with_outliers: MA with 15% outliers
+  k=15, tau2=0.1, true_effect=0.5
+
+- skewed_effects: MA with skewed true effect distribution
+  k=15, tau2=0.1, true_effect=0.4
+
+- publication_bias: MA with strong publication bias
+  k=15, tau2=0.1, true_effect=0.2
+
+- very_small: Very small MA (3 studies)
+  k=3, tau2=0.05, true_effect=0.6
+
+- multimodal: MA with bimodal effect distribution
+  k=20, tau2=0.2, true_effect=0.4
+
+- null_effect: MA with null true effect
+  k=15, tau2=0.1, true_effect=0.0
+
+- very_high_heterogeneity: MA with very high heterogeneity (I2 > 90%)
+  k=20, tau2=0.5, true_effect=0.5
+
