@@ -7,6 +7,9 @@ Novel approaches: Wavelet, Functional, Game-theoretic, Hybrid Methods
 import numpy as np
 from scipy import stats, optimize, special, signal
 import warnings
+
+# numpy>=2.0 removed np.trapz (renamed to np.trapezoid). Use whichever exists.
+_trapz = getattr(np, "trapezoid", getattr(np, "trapz", None))
 from typing import Tuple, List, Dict, Optional
 import time
 
@@ -202,7 +205,7 @@ class FunctionalMeanMeta(MetaAnalysisMethod):
             smoothed[i] = np.sum(kernel_weights * yi_sorted) / np.sum(kernel_weights)
 
         # Functional mean: integrate over the curve
-        mu = np.trapz(smoothed * precision_sorted, t) / np.trapz(precision_sorted, t)
+        mu = _trapz(smoothed * precision_sorted, t) / _trapz(precision_sorted, t)
 
         se = np.sqrt(1.0 / np.sum(wi_re))
         Q_stat, I2, p_het = self.compute_heterogeneity_stats(data, tau2)
