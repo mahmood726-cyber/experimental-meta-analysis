@@ -36,6 +36,27 @@ class MetaAnalysisData:
     sample_sizes: Optional[np.ndarray] = None
     study_names: Optional[List[str]] = None
 
+    def __post_init__(self):
+        # Fail closed on degenerate input instead of silently producing
+        # nan/inf downstream (e.g. sum(1/vi)=0 for empty or zero-variance data).
+        self.effect_sizes = np.asarray(self.effect_sizes, dtype=float)
+        self.variances = np.asarray(self.variances, dtype=float)
+        if self.effect_sizes.ndim != 1 or self.variances.ndim != 1:
+            raise ValueError("effect_sizes and variances must be 1-D arrays")
+        if self.effect_sizes.size == 0:
+            raise ValueError(
+                "MetaAnalysisData requires at least one study (effect_sizes is empty)"
+            )
+        if self.effect_sizes.size != self.variances.size:
+            raise ValueError(
+                f"effect_sizes (n={self.effect_sizes.size}) and variances "
+                f"(n={self.variances.size}) must have equal length"
+            )
+        if not np.all(np.isfinite(self.effect_sizes)):
+            raise ValueError("effect_sizes must all be finite")
+        if not np.all(np.isfinite(self.variances)) or np.any(self.variances <= 0):
+            raise ValueError("all within-study variances must be finite and strictly positive")
+
     @property
     def n_studies(self) -> int:
         return len(self.effect_sizes)
@@ -901,16 +922,24 @@ class HartungKnapp(MetaAnalysisMethod):
         wi_re = 1.0 / (vi + tau2)
         mu_re = np.sum(wi_re * yi) / np.sum(wi_re)
 
-        # HKSJ correction
-        q_adj = np.sum(wi_re * (yi - mu_re)**2) / (k - 1)
-        se_hksj = np.sqrt(q_adj / np.sum(wi_re))
-
         Q_stat, I2, p_het = self.compute_heterogeneity_stats(data, tau2)
 
-        # t-distribution CI
-        t_crit = stats.t.ppf(0.975, k - 1)
-        ci_lo = mu_re - t_crit * se_hksj
-        ci_hi = mu_re + t_crit * se_hksj
+        if k < 2:
+            # The HKSJ small-sample correction is undefined for a single
+            # study: q_adj divides by (k-1)=0 and the t-distribution df is 0,
+            # which previously produced nan SE/CI. Degrade gracefully to the
+            # normal-theory random-effects SE with a z-based CI.
+            se_hksj = np.sqrt(1.0 / np.sum(wi_re))
+            ci_lo, ci_hi = self.compute_ci(mu_re, se_hksj)
+        else:
+            # HKSJ correction
+            q_adj = np.sum(wi_re * (yi - mu_re)**2) / (k - 1)
+            se_hksj = np.sqrt(q_adj / np.sum(wi_re))
+
+            # t-distribution CI
+            t_crit = stats.t.ppf(0.975, k - 1)
+            ci_lo = mu_re - t_crit * se_hksj
+            ci_hi = mu_re + t_crit * se_hksj
 
         return MetaAnalysisResult(
             method_name=self.name,
@@ -996,19 +1025,26 @@ class KnappHartungModified(MetaAnalysisMethod):
         wi_re = 1.0 / (vi + tau2)
         mu_re = np.sum(wi_re * yi) / np.sum(wi_re)
 
-        # Modified HKSJ
-        q_adj = np.sum(wi_re * (yi - mu_re)**2) / (k - 1)
-
-        if self.truncate:
-            q_adj = max(1.0, q_adj)
-
-        se_mod = np.sqrt(q_adj / np.sum(wi_re))
-
         Q_stat, I2, p_het = self.compute_heterogeneity_stats(data, tau2)
 
-        t_crit = stats.t.ppf(0.975, k - 1)
-        ci_lo = mu_re - t_crit * se_mod
-        ci_hi = mu_re + t_crit * se_mod
+        if k < 2:
+            # Modified HKSJ is undefined for a single study (df=0 for the
+            # t-distribution CI previously produced nan bounds). Degrade
+            # gracefully to the normal-theory SE with a z-based CI.
+            se_mod = np.sqrt(1.0 / np.sum(wi_re))
+            ci_lo, ci_hi = self.compute_ci(mu_re, se_mod)
+        else:
+            # Modified HKSJ
+            q_adj = np.sum(wi_re * (yi - mu_re)**2) / (k - 1)
+
+            if self.truncate:
+                q_adj = max(1.0, q_adj)
+
+            se_mod = np.sqrt(q_adj / np.sum(wi_re))
+
+            t_crit = stats.t.ppf(0.975, k - 1)
+            ci_lo = mu_re - t_crit * se_mod
+            ci_hi = mu_re + t_crit * se_mod
 
         return MetaAnalysisResult(
             method_name=self.name,
@@ -1786,10 +1822,17 @@ class PermutationMeta(MetaAnalysisMethod):
 
         Q_stat, I2, p_het = self.compute_heterogeneity_stats(data, tau2)
 
-        # Use t-distribution for small samples
-        t_crit = stats.t.ppf(0.975, k - 1)
-        ci_lo = mu_orig - t_crit * se_perm
-        ci_hi = mu_orig + t_crit * se_perm
+        if k < 2:
+            # Permutation inference is degenerate for a single study and the
+            # t-distribution df is 0 (previously nan CI bounds). Fall back to
+            # the normal-theory RE SE with a z-based CI.
+            se_perm = se_orig
+            ci_lo, ci_hi = self.compute_ci(mu_orig, se_perm)
+        else:
+            # Use t-distribution for small samples
+            t_crit = stats.t.ppf(0.975, k - 1)
+            ci_lo = mu_orig - t_crit * se_perm
+            ci_hi = mu_orig + t_crit * se_perm
 
         return MetaAnalysisResult(
             method_name=self.name,
