@@ -323,3 +323,17 @@ For questions, issues, or suggestions, please open an issue on GitHub.
 **Total Methods**: 300+
 **Total Scenarios**: 12
 **Lines of Code**: ~25,000
+
+### Parallel execution contract
+
+The process runner sends the requested estimator instance to workers, preserving
+its class and constructor settings. Custom estimators must be picklable and
+importable by worker processes. Unknown names are never replaced by a default
+method. Method and scenario names must be unique; replication counts must be
+positive integers. A failed worker or an incomplete simulation batch raises an
+error rather than returning a partial comparison. Result ordering follows input
+ordering, and statistical results use the same seeded tasks as sequential runs
+(timing measurements naturally vary).
+
+Run `python -m pytest -q` for the default suite, including a real process-pool
+regression that compares results against sequential execution.
