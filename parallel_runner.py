@@ -7,21 +7,21 @@ Provides parallel execution capabilities for simulation studies.
 import numpy as np
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Dict, Callable, Any, Optional
+from dataclasses import asdict
+from typing import List, Dict, Optional
 import time
 from tqdm import tqdm
-import os
 
 # Import core components
 try:
     from .core_framework import MetaAnalysisMethod, MetaAnalysisData
     from .simulations.simulation_engine import (
-        SimulationEngine, SimulationScenario, SimulationResult, MethodPerformance
+        SimulationEngine, SimulationScenario, MethodPerformance
     )
 except ImportError:
     from core_framework import MetaAnalysisMethod, MetaAnalysisData
     from simulations.simulation_engine import (
-        SimulationEngine, SimulationScenario, SimulationResult, MethodPerformance
+        SimulationEngine, SimulationScenario, MethodPerformance
     )
 
 
@@ -31,15 +31,14 @@ def run_method_scenario_task(args: tuple) -> tuple:
     Runs a single method on a single scenario.
 
     Args:
-        args: (method_dict, scenario_dict, n_simulations, seed_start)
+        args: (method_instance, scenario_dict, n_simulations, seed_start)
 
     Returns:
         (method_name, scenario_name, performance_dict)
     """
-    method_dict, scenario_dict, n_simulations, seed_start = args
-
-    # Reconstruct method from dict
-    method = _method_from_dict(method_dict)
+    method, scenario_dict, n_simulations, seed_start = args
+    if not isinstance(method, MetaAnalysisMethod):
+        raise TypeError("Worker requires a MetaAnalysisMethod instance")
 
     # Reconstruct scenario from dict
     scenario = SimulationScenario(**scenario_dict)
@@ -49,48 +48,15 @@ def run_method_scenario_task(args: tuple) -> tuple:
     results = engine.run_simulation_batch(method, scenario, n_simulations,
                                          start_seed=seed_start, early_stop_failures=50)
 
-    if not results:
-        return (method.name, scenario.name, None)
+    if len(results) != n_simulations:
+        raise RuntimeError(
+            f"{method.name} / {scenario.name}: completed {len(results)} of "
+            f"{n_simulations} simulations; refusing partial performance metrics"
+        )
 
     perf = engine.aggregate_results(results)
 
-    # Convert performance to dict for serialization
-    perf_dict = {
-        'method_name': perf.method_name,
-        'n_simulations': perf.n_simulations,
-        'mean_bias': perf.mean_bias,
-        'median_bias': perf.median_bias,
-        'rmse': perf.rmse,
-        'mae': perf.mae,
-        'coverage_rate': perf.coverage_rate,
-        'mean_ci_width': perf.mean_ci_width,
-        'median_ci_width': perf.median_ci_width,
-        'relative_efficiency': perf.relative_efficiency,
-        'tau2_bias': perf.tau2_bias,
-        'mean_computation_time': perf.mean_computation_time,
-        'convergence_rate': perf.convergence_rate,
-    }
-
-    return (method.name, scenario.name, perf_dict)
-
-
-def _method_from_dict(method_dict: dict) -> MetaAnalysisMethod:
-    """Reconstruct a method object from its dictionary representation"""
-    # This is a simplified version - in practice, you'd need to store
-    # the class path and use reflection to reconstruct
-    from core_framework import DerSimonianLaird, REML, PauleMandel, HartungKnapp
-
-    # Map method names to classes
-    method_map = {
-        'DerSimonian-Laird': DerSimonianLaird,
-        'REML': REML,
-        'Paule-Mandel': PauleMandel,
-        'HartungKnapp': HartungKnapp,
-        # Add more mappings as needed
-    }
-
-    method_class = method_map.get(method_dict.get('name'), DerSimonianLaird)
-    return method_class()
+    return (method.name, scenario.name, asdict(perf))
 
 
 class ParallelSimulationRunner:
@@ -129,45 +95,35 @@ class ParallelSimulationRunner:
         Returns:
             Dictionary mapping (method_name, scenario_name) -> performance
         """
-        # Prepare tasks
+        if isinstance(n_simulations, bool) or not isinstance(n_simulations, int) or n_simulations < 1:
+            raise ValueError("n_simulations must be a positive integer")
+        if not methods or not scenarios:
+            raise ValueError("methods and scenarios must be non-empty")
+        if len({method.name for method in methods}) != len(methods):
+            raise ValueError("Method names must be unique")
+        if len({scenario.name for scenario in scenarios}) != len(scenarios):
+            raise ValueError("Scenario names must be unique")
+
+        # ProcessPoolExecutor pickles the actual estimator, preserving its class
+        # and constructor settings instead of guessing from a display name.
         tasks = []
         seed = 0
-
         for method in methods:
             for scenario in scenarios:
-                # Convert method to serializable dict
-                method_dict = {
-                    'name': method.name,
-                    'category': method.category,
-                }
-                # Convert scenario to dict
-                scenario_dict = {
-                    'name': scenario.name,
-                    'true_effect': scenario.true_effect,
-                    'tau2': scenario.tau2,
-                    'k_studies': scenario.k_studies,
-                    'n_per_study': scenario.n_per_study,
-                    'heterogeneity_type': scenario.heterogeneity_type,
-                    'publication_bias': scenario.publication_bias,
-                    'outlier_fraction': scenario.outlier_fraction,
-                    'description': scenario.description,
-                }
-
-                tasks.append((method_dict, scenario_dict, n_simulations, seed))
+                tasks.append((method, asdict(scenario), n_simulations, seed))
                 seed += n_simulations
 
         total_tasks = len(tasks)
         print(f"Running {total_tasks} method/scenario combinations in parallel...")
 
         # Run tasks
-        results = {}
+        results = {method.name: {} for method in methods}
 
         with ProcessPoolExecutor(max_workers=self.n_workers) as executor:
             futures = {executor.submit(run_method_scenario_task, task): task
                       for task in tasks}
 
             if show_progress:
-                futures_list = list(futures.values())
                 progress_iter = tqdm(as_completed(futures), total=total_tasks,
                                    desc="Simulation progress")
             else:
@@ -177,18 +133,19 @@ class ParallelSimulationRunner:
                 try:
                     method_name, scenario_name, perf_dict = future.result()
 
-                    if perf_dict is not None:
-                        # Reconstruct MethodPerformance
-                        perf = MethodPerformance(**perf_dict)
+                    results[method_name][scenario_name] = MethodPerformance(**perf_dict)
+                except Exception as exc:
+                    method, scenario_dict, _, _ = futures[future]
+                    for pending in futures:
+                        pending.cancel()
+                    raise RuntimeError(
+                        f"Parallel task failed for {method.name} / {scenario_dict['name']}"
+                    ) from exc
 
-                        if method_name not in results:
-                            results[method_name] = {}
-                        results[method_name][scenario_name] = perf
+        # Completion order depends on scheduling; public result order does not.
+        return {method.name: {scenario.name: results[method.name][scenario.name]
+                              for scenario in scenarios} for method in methods}
 
-                except Exception as e:
-                    print(f"\nError in task: {e}")
-
-        return results
 
     def benchmark_methods(
         self,
